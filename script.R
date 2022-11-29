@@ -91,10 +91,10 @@ p <- ggplot(df3) +
 
 ggsave("p.png", p)
 
-df[df$na38 == "ZZ", "na38"] <- NA
-df[df$trans == "Z", "trans"] <- NA
-df[df$tp == "Z", "tp"] <- NA
-df[endsWith(df$naf08, "Z"), "naf08"] <- NA
+df <- df %>% mutate(na38 = na_if(na38, "ZZ"))
+df <- df %>% mutate(trans = na_if(trans, "Z"))
+df <- df %>% mutate(tp = na_if(tp, "Z"))
+df <- df %>%  mutate(na_if(endsWith(naf08,"Z"), "Z"))
 
 library(forcats)
 df$sexe <- df$sexe %>%
