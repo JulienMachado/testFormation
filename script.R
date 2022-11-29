@@ -8,6 +8,9 @@ library(tidyverse)
 library(dplyr)
 
 
+Api_token <- yaml::read_yaml("env.yaml")$API_Token
+
+
 # Import des données --------------------------------------------------
 ## Import des données brut ============================================
 # j'importe les données avec read_csv2 parce que c'est un csv avec des ;
@@ -96,6 +99,7 @@ df <- df %>% mutate(trans = na_if(trans, "Z"))
 df <- df %>% mutate(tp = na_if(tp, "Z"))
 df <- df %>%  mutate(na_if(endsWith(naf08,"Z"), "Z"))
 
+
 library(forcats)
 df$sexe <- df$sexe %>%
   fct_recode(Homme = "1", Femme = "2")
@@ -139,7 +143,6 @@ fonction_de_stat_agregee(df %>%
                            mutate(aged = as.numeric(aged)) %>%
                            pull(aged))
 
-api_pwd <- "trotskitueleski$1917"
 
 # modelisation
 library(MASS)
@@ -151,3 +154,5 @@ df3[, "cs1"] <- factor(df3$cs1)
 df3 %>%
   filter(couple == "2" & aged > 40 & aged < 60)
 polr(surf ~ cs1 + factor(ur), df3)
+
+
