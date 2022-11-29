@@ -22,7 +22,7 @@ decennie_a_partir_annee <- function(annee) {
 #' @export I actual want this shit to be exoprted 
 #'
 #' @examples a nice example 
-fonction_de_stat_agregee <- function(a, b = "moyenne", ...) {
+stats_agregees <- function(a, b = "moyenne", ...) {
   checkvalue <- FALSE
   for (x in c("moyenne", "variance", "ecart-type", "sd")) {
     checkvalue <- (checkvalue | b == x)
