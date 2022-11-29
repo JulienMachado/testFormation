@@ -10,6 +10,7 @@ decennie_a_partir_annee <- function(annee) {
   return(annee - annee %% 10)
 }
 
+identity<-function(.) {.}
 
 
 #' dis shit is lit 
