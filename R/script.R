@@ -8,53 +8,56 @@ library(tidyverse)
 library(dplyr)
 
 
-Api_token <- yaml::read_yaml("env.yaml")$API_Token
+source("R/functions.R", encoding = "UTF-8")
 
-
-# Import des données --------------------------------------------------
-## Import des données brut ============================================
 # j'importe les données avec read_csv2 parce que c'est un csv avec des ;
 # et que read_csv attend comme separateur des ,
 df <- readr::read_csv2(
   "individu_reg.csv",
-  col_select = c(
+  col_names = c(
     "region", "aemm", "aged", "anai", "catl", "cs1", "cs2", "cs3",
     "couple", "na38", "naf08", "pnai12", "sexe", "surf", "tp",
     "trans", "ur"
   )
 )
 
+# y a un truc qui va pas avec l'import, je corrige
+colnames(df) <- df[1, ]
+df <- df[2:nrow(df), ]
 
+df2 <- df %>%
+  select(c(
+    "region", "dept", "aemm", "aged", "anai", "catl", "cs1", "cs2",
+    "cs3", "couple", "na38", "naf08", "pnai12", "sexe", "surf", "tp",
+    "trans", "ur"
+  ))
+print(df2, 20)
 
 # combien de professions
 print("Nombre de professions :")
-print(summarise(df, length(unique(unlist(cs3[!is.na(cs1)])))))
+print(summarise(df2, length(unique(unlist(cs3[!is.na(cs1)])))))
 print("Nombre de professions :''")
-print(summarise(df, length(unique(unlist(cs3[!is.na(cs2)])))))
+print(summarise(df2, length(unique(unlist(cs3[!is.na(cs2)])))))
 print("Nombre de professions :")
-print(summarise(df, length(unique(unlist(cs3[!is.na(cs3)])))))
+print(summarise(df2, length(unique(unlist(cs3[!is.na(cs3)])))))
 
-print_data_frame <- summarise(group_by(df, aged), n())
+print_data_frame <- summarise(group_by(df2, aged), n())
 print(print_data_frame)
 
-decennie_a_partir_annee <- function(annee) {
-  return(annee - annee %% 10)
-}
-
-
-df %>%
+df2 %>%
   select(aged) %>%
   ggplot(.) +
   geom_histogram(aes(x = 5 * floor(as.numeric(aged) / 5)), stat = "count")
 
-ggplot(df[as.numeric(df$aged) > 50, c(3, 4)], aes(
+ggplot(df2[as.numeric(df2$aged) > 50, c(3, 4)], aes(
   x = as.numeric(aged),
   y = ..density.., fill = factor(decennie_a_partir_annee(as.numeric(aemm)))
 ), alpha = 0.2) +
   geom_histogram() # position = "dodge") + scale_fill_viridis_d()
 
 
-# part d'homme dans chaque cohort-----------------------------------------------
+
+# part d'homme dans chaque cohort
 ggplot(df %>%
          group_by(aged, sexe) %>%
          summarise(SH_sexe = n()) %>%
@@ -69,7 +72,7 @@ ggplot(df %>%
   coord_cartesian(c(0, 100))
 
 # stats surf par statut
-df3 <- tibble(df %>%
+df3 <- tibble(df2 %>%
                 group_by(couple, surf) %>%
                 summarise(x = n()) %>%
                 group_by(couple) %>%
@@ -81,7 +84,7 @@ ggplot(df3) +
   )
 
 # stats trans par statut
-df3 <- tibble(df %>%
+df3 <- tibble(df2 %>%
                 group_by(couple, trans) %>%
                 summarise(x = n()) %>%
                 group_by(couple) %>%
@@ -94,59 +97,43 @@ p <- ggplot(df3) +
 
 ggsave("p.png", p)
 
-df <- df %>% mutate(na38 = na_if(na38, "ZZ"))
-df <- df %>% mutate(trans = na_if(trans, "Z"))
-df <- df %>% mutate(tp = na_if(tp, "Z"))
-df <- df %>%  mutate(na_if(endsWith(naf08,"Z"), "Z"))
-
+df2[df2$na38 == "ZZ", "na38"] <- NA
+df2[df2$trans == "Z", "trans"] <- NA
+df2[df2$tp == "Z", "tp"] <- NA
+df2[endsWith(df2$naf08, "Z"), "naf08"] <- NA
 
 library(forcats)
-df$sexe <- df$sexe %>%
+df2$sexe <- df2$sexe %>%
   fct_recode(Homme = "1", Femme = "2")
 
-# fonction de stat agregee
-fonction_de_stat_agregee <- function(a, b = "moyenne", ...) {
-  checkvalue <- FALSE
-  for (x in c("moyenne", "variance", "ecart-type", "sd")) {
-    checkvalue <- (checkvalue | b == x)
-  }
-  if (checkvalue == FALSE) stop("statistique non supportée")
-  
-  if (b == "moyenne") {
-    x <- mean(a, na.rm = TRUE, ...)
-  } else if (b == "ecart-type" || b == "sd") {
-    x <- sd(a, na.rm = TRUE, ...)
-  } else if (b == "variance") {
-    x <- var(a, na.rm = TRUE, ...)
-  }
-  return(x)
-}
+
 fonction_de_stat_agregee(rnorm(10))
 fonction_de_stat_agregee(rnorm(10), "ecart-type")
 fonction_de_stat_agregee(rnorm(10), "variance")
 
 
-fonction_de_stat_agregee(df %>%
+fonction_de_stat_agregee(df2 %>%
                            filter(sexe == "Homme") %>%
                            mutate(aged = as.numeric(aged)) %>%
                            pull(aged))
-fonction_de_stat_agregee(df %>%
+fonction_de_stat_agregee(df2 %>%
                            filter(sexe == "Femme") %>%
                            mutate(aged = as.numeric(aged)) %>%
                            pull(aged))
-fonction_de_stat_agregee(df %>%
+fonction_de_stat_agregee(df2 %>%
                            filter(sexe == "Homme" & couple == "2") %>%
                            mutate(aged = as.numeric(aged)) %>%
                            pull(aged))
-fonction_de_stat_agregee(df %>%
+fonction_de_stat_agregee(df2 %>%
                            filter(sexe == "Femme" & couple == "2") %>%
                            mutate(aged = as.numeric(aged)) %>%
                            pull(aged))
 
+api_pwd <- "trotskitueleski$1917"
 
 # modelisation
 library(MASS)
-df3 <- df %>%
+df3 <- df2 %>%
   dplyr::select(surf, cs1, ur, couple, aged) %>%
   filter(surf != "Z")
 df3[, 1] <- factor(df3$surf, ordered = TRUE)
@@ -154,5 +141,3 @@ df3[, "cs1"] <- factor(df3$cs1)
 df3 %>%
   filter(couple == "2" & aged > 40 & aged < 60)
 polr(surf ~ cs1 + factor(ur), df3)
-
-
