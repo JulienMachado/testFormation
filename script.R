@@ -7,6 +7,9 @@ if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
 library(dplyr)
 
+
+# Import des données --------------------------------------------------
+## Import des données brut ============================================
 # j'importe les données avec read_csv2 parce que c'est un csv avec des ;
 # et que read_csv attend comme separateur des ,
 df <- readr::read_csv2(
@@ -18,6 +21,7 @@ df <- readr::read_csv2(
   )
 )
 
+## Modification sur les données brut ==================================
 # y a un truc qui va pas avec l'import, je corrige
 colnames(df) <- df[1, ]
 df <- df[2:nrow(df), ]
